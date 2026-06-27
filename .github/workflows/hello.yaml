@@ -1,0 +1,15 @@
+name: Hello Actions
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 인사
+        run: echo "GitHub Actions 작동!"

@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jiyongham/first-repository.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true      # git에서 삭제된 리소스는 클러스터에서도 삭제
+      selfHeal: true   # 클러스터 상태가 git과 달라지면 자동 복구
+    syncOptions:
+    - CreateNamespace=true

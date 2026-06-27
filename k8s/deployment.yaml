@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-app
+  namespace: default
+  labels:
+    app: sample-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+    spec:
+      # GHCR 패키지가 private이면 아래 주석 해제 후 시크릿 생성:
+      # kubectl create secret docker-registry ghcr-credentials \
+      #   --docker-server=ghcr.io --docker-username=jiyongham \
+      #   --docker-password=<GITHUB_PAT> -n default
+      # imagePullSecrets:
+      # - name: ghcr-credentials
+      containers:
+      - name: sample-app
+        image: ghcr.io/jiyongham/sample-app:latest
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi

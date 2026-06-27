@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: ratings
+spec:
+  hosts:
+  - ratings
+  http:
+  - fault:
+      abort:
+        percentage:
+          value: 50          # 요청의 50%에만 지연 적용
+        httpStatus: 500      # 2초 지연
+    route:
+    - destination:
+        host: ratings        # ratings 서비스로 라우팅
