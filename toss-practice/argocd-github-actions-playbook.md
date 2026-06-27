@@ -24,6 +24,228 @@ workplace/
 
 ---
 
+## 사전 구성 — 레포 파일 세팅
+
+실습에 필요한 4가지 구성 요소를 직접 만들면서 각 역할을 이해합니다.
+
+### 1) 샘플 앱 (`sample-app/`)
+
+Go HTTP 서버. 빌드 시 git SHA를 버전으로 주입해서 "어떤 커밋이 배포됐는지" 앱에서 바로 확인 가능.
+
+**`sample-app/main.go`**
+```go
+package main
+
+import (
+    "fmt"
+    "net/http"
+)
+
+var version = "dev"   // Dockerfile ARG → ldflags로 빌드 시 주입됨
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hello from sample-app! version: %s\n", version)
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+    w.WriteHeader(http.StatusOK)
+}
+
+func main() {
+    http.HandleFunc("/", rootHandler)
+    http.HandleFunc("/health", healthHandler)
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+**`sample-app/Dockerfile`** — 멀티스테이지 빌드 (Go 빌드 이미지 → 경량 alpine 실행 이미지)
+```dockerfile
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+COPY go.mod ./
+COPY *.go ./
+ARG VERSION=dev
+RUN go build -ldflags="-X main.version=${VERSION}" -o server .
+
+FROM alpine:3.19
+COPY --from=builder /app/server /server
+EXPOSE 8080
+CMD ["/server"]
+```
+
+> **포인트**: `ARG VERSION` → `go build -ldflags="-X main.version=${VERSION}"` 조합으로
+> 컨테이너 실행 시 소스 수정 없이 버전 문자열이 바이너리에 삽입됩니다.
+
+---
+
+### 2) K8s 매니페스트 (`k8s/`)
+
+ArgoCD가 감시하는 디렉토리. CI가 이 파일의 image 태그를 자동으로 업데이트합니다.
+
+**`k8s/deployment.yaml`** (핵심 부분)
+```yaml
+containers:
+- name: sample-app
+  image: ghcr.io/jiyongham/sample-app:latest   # ← CI가 매 배포마다 SHA로 교체
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits:   { cpu: 200m, memory: 128Mi }
+```
+
+**`k8s/service.yaml`**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-app
+spec:
+  selector:
+    app: sample-app
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP
+```
+
+---
+
+### 3) ArgoCD Application (`argocd/application.yaml`)
+
+ArgoCD에 "어느 레포의 어느 경로를 어느 클러스터에 배포할지" 선언하는 CRD.
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jiyongham/first-repository.git
+    targetRevision: main
+    path: k8s                  # k8s/ 디렉토리 전체를 감시
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true              # git에서 삭제된 리소스 → 클러스터에서도 삭제
+      selfHeal: true           # 클러스터가 git과 달라지면 자동 복구
+    syncOptions:
+    - CreateNamespace=true
+```
+
+---
+
+### 4) GitHub Actions 워크플로우 (`.github/workflows/ci-cd.yaml`)
+
+`sample-app/` 이하 파일이 `main` 브랜치에 push될 때만 실행됩니다.
+
+```yaml
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sample-app/**'   # k8s/ 매니페스트 업데이트 커밋은 재트리거 안 됨
+```
+
+**2-job 구조:**
+
+```
+[ci job]                               [push job]  (ci 통과 시만 실행)
+  ① go test ./...             →통과→   ③ docker build
+  ② SHORT_SHA 추출 (7자리)             ④ GHCR에 push (SHA 태그 + latest)
+     → push job에 output으로 전달      ⑤ k8s/deployment.yaml image 태그를 SHA로 sed 교체
+                                       ⑥ git commit & push (github-actions[bot] 계정)
+```
+
+**전체 워크플로우 파일:**
+```yaml
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sample-app/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: jiyongham/sample-app
+
+jobs:
+  ci:
+    name: Test
+    runs-on: ubuntu-latest
+    outputs:
+      short-sha: ${{ steps.sha.outputs.short }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Run tests
+        run: go test ./...
+        working-directory: ./sample-app
+      - name: Extract short SHA
+        id: sha
+        run: echo "short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+  push:
+    name: Build & Deploy
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # 매니페스트 업데이트 커밋 push 권한
+      packages: write   # GHCR 이미지 push 권한
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./sample-app
+          push: true
+          build-args: VERSION=${{ needs.ci.outputs.short-sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.ci.outputs.short-sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Update k8s manifest
+        run: |
+          sed -i "s|image: ghcr.io/jiyongham/sample-app:.*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.ci.outputs.short-sha }}|" k8s/deployment.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/deployment.yaml
+          git diff --staged --quiet || git commit -m "ci: update image to ${{ needs.ci.outputs.short-sha }}"
+          git push
+```
+
+**주요 설계 포인트:**
+
+| 포인트 | 설명 |
+|--------|------|
+| `paths: ['sample-app/**']` | 매니페스트 업데이트 커밋(k8s/)이 CI를 재트리거하는 무한루프 방지 |
+| `needs: ci` | ci job 실패 시 이미지 push를 막음 (broken image 배포 방지) |
+| `job outputs` | short-sha를 ci → push job 사이에 전달 (같은 SHA로 이미지 태그와 매니페스트 일치 보장) |
+| `git diff --staged --quiet \|\|` | 변경사항이 없으면 빈 커밋 방지 |
+| `GITHUB_TOKEN` | 별도 시크릿 불필요 — Actions가 자동 제공하는 토큰으로 GHCR push + repo write 가능 |
+
+---
+
 ## 0. 사전 준비
 
 ### kind 클러스터 확인
