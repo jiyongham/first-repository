@@ -8,7 +8,7 @@ import (
 var version = "dev"
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello from sample-app! version: %s\n", version)
+	fmt.Fprintf(w, "Hello from sample-app v2! version: %s\n", version)
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
