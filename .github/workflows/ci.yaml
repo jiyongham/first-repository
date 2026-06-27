@@ -23,3 +23,4 @@ jobs:
         with:
           push: true
           tags: ghcr.io/${{ github.repository }}/productpage:${{ github.sha }}
+#실수로 삭제
