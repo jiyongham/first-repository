@@ -21,7 +21,8 @@ pipelines:
         destination: src
         filter:
           ignore:
-            - "k8s/**"         # 매니페스트 봇 커밋 → 파이프라인 재트리거 방지
+            - "k8s/**"
+            - "k8s/deployment.yaml"
             - ".github/**"
             - "gocd/**"
             - ".gocd/**"
