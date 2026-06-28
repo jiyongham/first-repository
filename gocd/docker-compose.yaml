@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  gocd-server:
+    image: gocd/gocd-server:v24.5.0      # custom build 없이 이미지 직접 사용
+    platform: linux/amd64
+    container_name: gocd-server
+    ports:
+      - "8153:8153"
+      - "8154:8154"
+    volumes:
+      - gocd-server-data:/godata
+    networks:
+      - gocd-net
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8153/go/api/v1/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+
+  gocd-agent:
+    build:
+      context: ./agent
+    platform: linux/amd64
+    container_name: gocd-agent
+    environment:
+      GO_SERVER_URL: http://gocd-server:8153/go
+      AGENT_AUTO_REGISTER_KEY: "434bd0d6-127b-43fe-87ce-8f079f881af0"
+      AGENT_AUTO_REGISTER_RESOURCES: "docker,go"
+      AGENT_AUTO_REGISTER_HOSTNAME: "local-agent-01"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - go-module-cache:/tmp/gopath/pkg/mod
+    depends_on:
+      gocd-server:
+        condition: service_healthy
+    networks:
+      - gocd-net
+
+networks:
+  gocd-net:
+
+volumes:
+  gocd-server-data:
+  go-module-cache:
