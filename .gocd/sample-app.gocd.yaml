@@ -76,8 +76,10 @@ pipelines:
                         SHORT_SHA=$(git rev-parse --short HEAD)
                         echo "==> 빌드 태그: ${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}"
 
-                        ## GHCR 로그인
-                        docker login "${REGISTRY}" -u "${GITHUB_USER}" -p "${GITHUB_TOKEN}"
+                        ## GHCR 로그인 (credsStore 우회: config.json 직접 작성)
+                        mkdir -p ~/.docker
+                        AUTH=$(printf '%s:%s' "${GITHUB_USER}" "${GITHUB_TOKEN}" | base64 | tr -d '\n')
+                        printf '{"auths":{"%s":{"auth":"%s"}}}' "${REGISTRY}" "${AUTH}" > ~/.docker/config.json
 
                         ## 멀티스테이지 빌드 (SHA를 버전으로 주입)
                         docker build \
