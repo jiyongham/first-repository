@@ -87,6 +87,12 @@ pipelines:
                         printf '{"auths":{"%s":{"auth":"%s"}}}' "${REGISTRY}" "${AUTH}" > ~/.docker/config.json
                         echo "==> 새 docker config:"
                         cat ~/.docker/config.json | sed 's/"auth":"[^"]*"/"auth":"***"/g'
+                        BEARER=$(curl -s -u "${GITHUB_USER}:${GITHUB_TOKEN}" \
+                          "https://ghcr.io/token?service=ghcr.io&scope=repository:${IMAGE_NAME}:push,pull" \
+                          | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+                        BEARER_LEN=$(printf '%s' "${BEARER}" | wc -c | tr -d ' ')
+                        echo "==> GHCR Bearer 토큰 길이: ${BEARER_LEN}"
+                        if [ "${BEARER_LEN}" -lt 10 ]; then echo "ERROR: GHCR 인증 실패 - TOKEN 값 확인 필요"; exit 1; fi
 
                         ## 멀티스테이지 빌드 (SHA를 버전으로 주입)
                         docker build \
