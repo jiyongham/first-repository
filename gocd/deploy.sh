@@ -1,8 +1,8 @@
-# deploy.sh
 #!/bin/bash
 echo "=== Deploy Start ==="
-DEPLOY_DIR="/opt/myapp"
+DEPLOY_DIR="/opt/deploy"
 mkdir -p $DEPLOY_DIR
-cp dist/app.sh $DEPLOY_DIR/app.sh
-echo "배포 완료: $DEPLOY_DIR/app.sh"
-$DEPLOY_DIR/app.sh
+cp -r dist/* $DEPLOY_DIR/
+echo "배포 완료! $(date)"
+echo "=== 배포된 파일 목록 ==="
+ls -la $DEPLOY_DIR/
