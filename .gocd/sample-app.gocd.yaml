@@ -32,7 +32,7 @@ pipelines:
       IMAGE_NAME: jiyongham/sample-app
       GITHUB_USER: jiyongham
     secure_variables:
-      GITHUB_TOKEN: "AES:OS//FbWGEWIhLatRBz7i9A==:M/DW0dcnNX1S4yHqQMjDo0lyOfllAi8ZsUG7zbCmnf0="
+      GITHUB_TOKEN: "AES:URDJW4BRlF2+zqOwAuR1bA==:j71ruSqVIXcDbQEhj3scL+PNOBum9jA4iJGnI8BZ2t8rcmn4+x8X0BngnrtpzhmB"
 
     # ── Stages ────────────────────────────────────────────────────────────────
     stages:
