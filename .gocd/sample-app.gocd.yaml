@@ -31,8 +31,9 @@ pipelines:
       REGISTRY: ghcr.io
       IMAGE_NAME: jiyongham/sample-app
       GITHUB_USER: jiyongham
-    # GITHUB_TOKEN 은 GoCD UI에서 보안 변수로 추가
-    # (Admin > Pipelines > sample-app > Environment Variables > Secure)
+      GITHUB_TOKEN:
+        secure: true
+        value: "AES:OS//FbWGEWIhLatRBz7i9A==:M/DW0dcnNX1S4yHqQMjDo0lyOfllAi8ZsUG7zbCmnf0="
 
     # ── Stages ────────────────────────────────────────────────────────────────
     stages:
