@@ -17,12 +17,8 @@ pipelines:
       git:
         git: https://github.com/jiyongham/first-repository.git
         branch: main
-        auto_update: true
+        auto_update: false
         destination: src
-        filter:
-          invert_filter: true
-          ignore:
-            - "sample-app/**"
 
     # ── 공통 환경변수 ─────────────────────────────────────────────────────────
     environment_variables:
