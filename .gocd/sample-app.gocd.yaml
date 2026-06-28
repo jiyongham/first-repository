@@ -77,8 +77,7 @@ pipelines:
                         echo "==> 빌드 태그: ${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}"
 
                         ## GHCR 로그인
-                        echo "${GITHUB_TOKEN}" | docker login "${REGISTRY}" \
-                          -u "${GITHUB_USER}" --password-stdin
+                        docker login "${REGISTRY}" -u "${GITHUB_USER}" -p "${GITHUB_TOKEN}"
 
                         ## 멀티스테이지 빌드 (SHA를 버전으로 주입)
                         docker build \
