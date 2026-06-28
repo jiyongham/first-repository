@@ -31,9 +31,8 @@ pipelines:
       REGISTRY: ghcr.io
       IMAGE_NAME: jiyongham/sample-app
       GITHUB_USER: jiyongham
-      GITHUB_TOKEN:
-        secure: true
-        value: "AES:OS//FbWGEWIhLatRBz7i9A==:M/DW0dcnNX1S4yHqQMjDo0lyOfllAi8ZsUG7zbCmnf0="
+    secure_variables:
+      GITHUB_TOKEN: "AES:OS//FbWGEWIhLatRBz7i9A==:M/DW0dcnNX1S4yHqQMjDo0lyOfllAi8ZsUG7zbCmnf0="
 
     # ── Stages ────────────────────────────────────────────────────────────────
     stages:
