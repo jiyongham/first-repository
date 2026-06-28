@@ -76,18 +76,18 @@ pipelines:
                         SHORT_SHA=$(git rev-parse --short HEAD)
                         echo "==> 빌드 태그: ${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}"
 
-                        # GHCR 로그인
+                        ## GHCR 로그인
                         echo "${GITHUB_TOKEN}" | docker login "${REGISTRY}" \
                           -u "${GITHUB_USER}" --password-stdin
 
-                        # 멀티스테이지 빌드 (SHA를 버전으로 주입)
+                        ## 멀티스테이지 빌드 (SHA를 버전으로 주입)
                         docker build \
                           --build-arg "VERSION=${SHORT_SHA}" \
                           -t "${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}" \
                           -t "${REGISTRY}/${IMAGE_NAME}:latest" \
                           ./sample-app
 
-                        # SHA 태그 + latest 푸시
+                        ## SHA 태그 + latest 푸시
                         docker push "${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}"
                         docker push "${REGISTRY}/${IMAGE_NAME}:latest"
                         echo "==> 이미지 푸시 완료: ${SHORT_SHA}"
@@ -111,7 +111,7 @@ pipelines:
                         SHORT_SHA=$(git rev-parse --short HEAD)
                         echo "==> 매니페스트 업데이트: ${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}"
 
-                        # deployment.yaml 이미지 태그 교체
+                        ## deployment.yaml 이미지 태그 교체
                         sed -i \
                           "s|image: ghcr.io/jiyongham/sample-app:.*|image: ${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}|" \
                           k8s/deployment.yaml
@@ -120,7 +120,7 @@ pipelines:
                         git config user.name "GoCD Agent"
                         git add k8s/deployment.yaml
 
-                        # 변경사항 없으면 빈 커밋 방지
+                        ## 변경사항 없으면 빈 커밋 방지
                         if git diff --staged --quiet; then
                           echo "변경사항 없음. 건너뜀."
                           exit 0
