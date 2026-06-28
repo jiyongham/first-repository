@@ -23,7 +23,7 @@ spec:
       # - name: ghcr-credentials
       containers:
       - name: sample-app
-        image: ghcr.io/jiyongham/sample-app:c51a6af
+        image: ghcr.io/jiyongham/sample-app:b76da75
         ports:
         - containerPort: 8080
         readinessProbe:
