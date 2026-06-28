@@ -78,7 +78,8 @@ pipelines:
 
                         ## GHCR 로그인 (credsStore 우회: config.json 직접 작성)
                         if [ -z "${GITHUB_TOKEN}" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 1; fi
-                        echo "==> GITHUB_USER: ${GITHUB_USER}, TOKEN length: ${#GITHUB_TOKEN}"
+                        TOKEN_LEN=$(printf '%s' "${GITHUB_TOKEN}" | wc -c | tr -d ' ')
+                        echo "==> GITHUB_USER: ${GITHUB_USER}, TOKEN length: ${TOKEN_LEN}"
                         mkdir -p ~/.docker
                         AUTH=$(printf '%s:%s' "${GITHUB_USER}" "${GITHUB_TOKEN}" | base64 | tr -d '\n')
                         printf '{"auths":{"%s":{"auth":"%s"}}}' "${REGISTRY}" "${AUTH}" > ~/.docker/config.json
