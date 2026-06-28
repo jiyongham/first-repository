@@ -20,12 +20,9 @@ pipelines:
         auto_update: true
         destination: src
         filter:
+          invert_filter: true
           ignore:
-            - "k8s/**"
-            - "k8s/deployment.yaml"
-            - ".github/**"
-            - "gocd/**"
-            - ".gocd/**"
+            - "sample-app/**"
 
     # ── 공통 환경변수 ─────────────────────────────────────────────────────────
     environment_variables:
