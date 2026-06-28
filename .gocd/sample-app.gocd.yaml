@@ -80,9 +80,13 @@ pipelines:
                         if [ -z "${GITHUB_TOKEN}" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 1; fi
                         TOKEN_LEN=$(printf '%s' "${GITHUB_TOKEN}" | wc -c | tr -d ' ')
                         echo "==> GITHUB_USER: ${GITHUB_USER}, TOKEN length: ${TOKEN_LEN}"
+                        echo "==> 기존 docker config:"
+                        cat ~/.docker/config.json 2>/dev/null | sed 's/"auth":"[^"]*"/"auth":"***"/g' || echo "(없음)"
                         mkdir -p ~/.docker
                         AUTH=$(printf '%s:%s' "${GITHUB_USER}" "${GITHUB_TOKEN}" | base64 | tr -d '\n')
                         printf '{"auths":{"%s":{"auth":"%s"}}}' "${REGISTRY}" "${AUTH}" > ~/.docker/config.json
+                        echo "==> 새 docker config:"
+                        cat ~/.docker/config.json | sed 's/"auth":"[^"]*"/"auth":"***"/g'
 
                         ## 멀티스테이지 빌드 (SHA를 버전으로 주입)
                         docker build \
