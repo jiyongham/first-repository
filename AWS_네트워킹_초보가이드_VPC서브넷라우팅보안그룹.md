@@ -119,27 +119,113 @@ RDS의 SG:   인바운드 3306 from [앱의 SG]     ← 앱에서 오는 것만
 
 ---
 
-## 5. 미니 실습 (직접 손으로 — 30~60분, 거의 무료)
+## 5. 미니 실습 (직접 손으로 — 콘솔 클릭 단계별)
 
-> EC2 t2.micro는 프리티어. NAT GW는 유료이니 실습 후 삭제. 리전은 서울 고정.
+> **환경**: 리전은 우측 상단에서 **서울(ap-northeast-2)** 고정. EC2 t2.micro는 프리티어지만 **NAT GW는 유료(시간+데이터)** — 랩 끝나면 반드시 삭제(8단계). 소요 60~90분.
+> **사전 준비**: EC2용 키페어 1개 생성. EC2 콘솔 → 좌측 `네트워크 및 보안 > 키 페어` → `키 페어 생성` → 이름 `lab-key`, 유형 RSA, 형식 `.pem`(mac/Linux) → 다운로드된 `lab-key.pem`을 `chmod 400 lab-key.pem`.
+> 아래는 전부 **콘솔(GUI) 클릭 경로**로 적었고, 각 랩 끝에 **CLI 등가 명령**을 참고로 붙였습니다. 콘솔로 먼저 개념을 익히고, CLI는 "아 이게 그 클릭이었구나" 확인용.
 
-**랩 A — VPC 수동 구축 (콘솔로 개념 체득)**
-1. VPC 생성: `10.0.0.0/16`
-2. 서브넷 2개: 퍼블릭 `10.0.1.0/24`(AZ-a), 프라이빗 `10.0.11.0/24`(AZ-a)
-3. IGW 생성 → VPC에 attach
-4. 퍼블릭용 라우트테이블: `0.0.0.0/0 → IGW` 추가 → 퍼블릭 서브넷에 연결
-5. NAT GW: 퍼블릭 서브넷에 생성(EIP 할당) → 프라이빗용 라우트테이블 `0.0.0.0/0 → NAT` → 프라이빗 서브넷에 연결
-6. 퍼블릭 서브넷에 EC2(퍼블릭IP on, SG 인바운드 22 from 내 IP), 프라이빗 서브넷에 EC2(퍼블릭IP off)
-7. **검증**: 내 PC → SSH → 퍼블릭 EC2 접속 성공 / 퍼블릭 EC2 → 프라이빗 EC2 내부 SSH(10.0.11.x) 성공 / 프라이빗 EC2에서 `curl https://google.com` (NAT 통해 나감) 성공 / 내 PC → 프라이빗 EC2 직접 접속은 **실패**(정상)
-8. **삭제**: NAT GW → EIP 해제 → 나머지 정리
+### 랩 A — VPC 수동 구축 (핵심 랩)
 
-**랩 B — SG 체인 실습**
-- 퍼블릭 EC2 SG: 22 from 내IP
-- 프라이빗 EC2 SG: 22 from [퍼블릭 EC2의 SG]  ← IP 아닌 SG 참조
-- 검증: 퍼블릭에서만 프라이빗으로 SSH 되고, 다른 데선 안 됨
+전 과정을 **VPC 콘솔**(서비스 검색창에 `VPC` 입력)에서 진행합니다. 좌측 사이드바 메뉴 이름을 그대로 따라가세요.
 
-**랩 C — NACL로 stateless 체감(선택)**
-- 프라이빗 서브넷 NACL에서 아웃바운드 ephemeral(1024-65535)을 일부러 막아보고 "인바운드는 허용인데 응답이 안 오는" 현상 재현 → 다시 열어 복구. (Stateless가 몸에 박힘)
+**A-1. VPC 생성**
+- 좌측 `Your VPCs` → 우측 상단 `Create VPC`
+- **`VPC only`** 선택(‘VPC and more’는 자동으로 다 만들어줘서 개념 학습엔 부적합 — 손으로 하는 게 목적)
+- Name tag: `lab-vpc` / IPv4 CIDR: `10.0.0.0/16` / 나머지 기본 → `Create VPC`
+
+**A-2. 서브넷 2개 생성**
+- 좌측 `Subnets` → `Create subnet`
+- VPC 선택: `lab-vpc`
+- 서브넷 1 (퍼블릭): Name `lab-public-a` / AZ `ap-northeast-2a` / CIDR `10.0.1.0/24`
+- 아래 `Add new subnet` → 서브넷 2 (프라이빗): Name `lab-private-a` / AZ `ap-northeast-2a` / CIDR `10.0.11.0/24`
+- `Create subnet`
+- (퍼블릭 서브넷만) `lab-public-a` 선택 → `Actions > Edit subnet settings` → **`Enable auto-assign public IPv4 address` 체크** → Save. ← 이거 빼먹으면 여기 띄운 EC2에 공인IP가 안 붙어서 SSH 안 됨(단골 실수)
+
+**A-3. 인터넷 게이트웨이(IGW)**
+- 좌측 `Internet gateways` → `Create internet gateway` → Name `lab-igw` → Create
+- 만들어진 igw 선택 → `Actions > Attach to VPC` → `lab-vpc` 선택 → Attach. (Attach 안 하면 그냥 붕 떠 있는 상태)
+
+**A-4. NAT 게이트웨이**
+- 좌측 `NAT gateways` → `Create NAT gateway`
+- Name `lab-nat` / Subnet: **`lab-public-a`(반드시 퍼블릭 서브넷)** / Connectivity `Public` / `Allocate Elastic IP` 클릭(EIP 자동 할당) → Create
+- 상태가 `Available` 될 때까지 1~2분 대기.
+
+**A-5. 라우트 테이블 2개 (퍼블릭/프라이빗 분리)**
+- 좌측 `Route tables` → `Create route table` → Name `lab-rt-public` / VPC `lab-vpc` → Create
+  - 선택 → 하단 `Routes` 탭 → `Edit routes` → `Add route`: Destination `0.0.0.0/0`, Target `Internet Gateway > lab-igw` → Save
+  - 하단 `Subnet associations` 탭 → `Edit subnet associations` → **`lab-public-a` 체크** → Save
+- 다시 `Create route table` → Name `lab-rt-private` / VPC `lab-vpc` → Create
+  - `Routes` → `Edit routes` → `Add route`: Destination `0.0.0.0/0`, Target `NAT Gateway > lab-nat` → Save
+  - `Subnet associations` → `Edit subnet associations` → **`lab-private-a` 체크** → Save
+- 💡 `10.0.0.0/16 → local`은 두 테이블에 자동으로 이미 있음(삭제 불가). 이게 서브넷 간 내부 통신을 보장.
+
+**A-6. EC2 2대 기동**
+- EC2 콘솔 → `Launch instances`
+- **퍼블릭 EC2**: Name `lab-public-ec2` / AMI `Amazon Linux 2023` / t2.micro / Key pair `lab-key`
+  - `Network settings` → `Edit`: VPC `lab-vpc`, Subnet `lab-public-a`, **Auto-assign public IP `Enable`**
+  - Security group: `Create` 이름 `sg-public`, 규칙 `SSH(22) / Source: My IP` → Launch
+- **프라이빗 EC2**: Name `lab-private-ec2` / 같은 AMI / t2.micro / Key pair `lab-key`
+  - `Network settings` → `Edit`: VPC `lab-vpc`, Subnet `lab-private-a`, **Auto-assign public IP `Disable`**
+  - Security group: `Create` 이름 `sg-private`, 규칙 `SSH(22) / Source: sg-public`(검색창에 sg 이름 치면 SG가 소스로 잡힘 — IP 아님!) → Launch
+
+**A-7. 검증** (퍼블릭 EC2의 공인 IP를 콘솔에서 확인 후)
+```bash
+# 내 PC → 퍼블릭 EC2 (성공해야 정상)
+ssh -i lab-key.pem ec2-user@<퍼블릭EC2_공인IP>
+
+# 프라이빗 EC2로 넘어가려면 키를 미리 퍼블릭에 복사하거나 ssh-agent 포워딩 사용
+# (간편하게) 내 PC에서:  scp -i lab-key.pem lab-key.pem ec2-user@<퍼블릭IP>:~/
+# 퍼블릭 EC2 안에서 → 프라이빗 EC2 (내부 IP로, 성공해야 정상)
+ssh -i lab-key.pem ec2-user@10.0.11.x
+
+# 프라이빗 EC2 안에서 → 외부 (NAT 타고 나감, 성공해야 정상)
+curl -I https://www.google.com
+
+# 내 PC → 프라이빗 EC2 직접 (반드시 실패해야 정상 — 공인IP도 없고 라우팅도 없음)
+```
+→ 이 4가지 결과가 **A-1~A-6을 제대로 했다는 증거**. 하나라도 어긋나면 7장 Gotchas로 역추적.
+
+**A-8. 삭제 (요금 방지 — 순서 중요)**
+1. EC2 2대 종료: EC2 콘솔 → 인스턴스 선택 → `Instance state > Terminate`
+2. **NAT GW 삭제**: VPC 콘솔 `NAT gateways` → `lab-nat` → `Actions > Delete` (이게 제일 비쌈, 최우선)
+3. **EIP 반환**: `Elastic IPs` → 방금 NAT가 쓰던 IP → `Actions > Release`
+4. IGW: `Internet gateways` → `lab-igw` → `Detach from VPC` → `Delete`
+5. VPC 삭제: `Your VPCs` → `lab-vpc` → `Actions > Delete VPC` (서브넷/라우트테이블/SG가 딸려서 함께 지워짐)
+
+> **CLI 등가(참고)** — 콘솔로 한 걸 명령으로 보면 개념이 굳습니다.
+> ```bash
+> aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=lab-vpc}]'
+> aws ec2 create-subnet --vpc-id vpc-xxxx --cidr-block 10.0.1.0/24 --availability-zone ap-northeast-2a
+> aws ec2 create-internet-gateway ; aws ec2 attach-internet-gateway --vpc-id vpc-xxxx --internet-gateway-id igw-xxxx
+> aws ec2 create-route-table --vpc-id vpc-xxxx
+> aws ec2 create-route --route-table-id rtb-xxxx --destination-cidr-block 0.0.0.0/0 --gateway-id igw-xxxx
+> aws ec2 associate-route-table --route-table-id rtb-xxxx --subnet-id subnet-xxxx
+> ```
+
+### 랩 B — SG 체인 실습 (IP 하드코딩 없이 계층 격리)
+
+랩 A의 `sg-public`/`sg-private`를 그대로 활용. 핵심은 **프라이빗 SG의 소스가 IP가 아니라 SG**라는 점.
+
+1. EC2 콘솔 → `네트워크 및 보안 > Security Groups` → `sg-private` 선택 → 하단 `Inbound rules` 탭 → `Edit inbound rules`
+2. 규칙 확인: Type `SSH`, Source 칸에 **`sg-public`(sg-xxxx)**가 들어가 있어야 함. (IP CIDR이면 잘못된 것 → 지우고 검색창에 `sg-public` 입력해 SG로 지정)
+3. **검증 A (성공)**: 퍼블릭 EC2에 SSH 접속 → 거기서 `ssh ec2-user@10.0.11.x`(프라이빗) 성공
+4. **검증 B (실패해야 정상)**: 잠깐 실험 — `sg-public` 인바운드 SSH 소스를 `My IP`가 아닌 아무 IP로 바꿔 접근 시도하면 막힘. 즉 "sg-public을 통과한 트래픽만" 프라이빗에 도달.
+5. 온프렘 대응: 이게 조닝의 "DMZ 존을 거친 것만 내부 존 허용" 정책과 정확히 같은 사고. 면접에서 이 문장 그대로 써도 됨.
+
+> **CLI 등가**: `aws ec2 authorize-security-group-ingress --group-id sg-private --protocol tcp --port 22 --source-group sg-public` — `--source-group`이 "SG 참조"의 핵심 플래그.
+
+### 랩 C — NACL로 stateless 체감 (선택, 15분)
+
+"SG는 열었는데 왜 안 되지?"의 정체를 **일부러 재현**하는 랩. Stateful/Stateless 차이를 몸으로 익히는 게 목적.
+
+1. VPC 콘솔 → 좌측 `Network ACLs` → 프라이빗 서브넷(`lab-private-a`)에 연결된 NACL 선택 (기본 NACL이면 `Subnet associations` 탭에서 확인)
+2. 하단 `Outbound rules` 탭 → `Edit outbound rules` → **ephemeral 포트 대역(`1024-65535`)을 `DENY`로** 추가하거나, 기본 `100 ALLOW ALL` 규칙을 지움 → Save
+3. **재현**: 프라이빗 EC2에서 `curl -I https://www.google.com` → **요청은 나가는데 응답이 안 돌아와 타임아웃.** 인바운드/아웃바운드 SG는 그대로인데도 막힘. 이게 stateless의 정체 — 리턴 트래픽(임시 포트)을 아웃바운드에서 명시 허용해야 함.
+4. **복구**: 아웃바운드 규칙을 다시 `100 ALLOW 0.0.0.0/0 ALL`로 되돌림 → 다시 `curl` 하면 성공.
+5. 교훈: **SG(stateful)는 리턴 자동 허용, NACL(stateless)는 리턴을 손으로 열어야 함.** SAA 빈출이자 실무 트러블슈팅 단골.
+
+> ⚠️ 랩 C까지 했으면 **랩 A-8 삭제를 반드시 수행**. 특히 NAT GW와 EIP.
 
 ---
 

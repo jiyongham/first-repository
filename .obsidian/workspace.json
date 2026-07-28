@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "348239b436575b63",
+        "id": "99b526d685b71be2",
         "type": "tabs",
         "children": [
           {
-            "id": "939a3cd33488984f",
+            "id": "5a755e0f65b42a29",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -78,7 +78,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "ff5b3c0e2181ea24",
@@ -183,34 +184,35 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "939a3cd33488984f",
+  "active": "5a755e0f65b42a29",
   "lastOpenFiles": [
+    "AWS_SAA_EKS_실습_플레이북.md",
+    "AWS_네트워킹_초보가이드_VPC서브넷라우팅보안그룹.md",
+    "AWS 플레이북.md",
+    "resume/이력서_쿠팡_SRE_최적화.md",
+    "resume/이력서_코인원_DevOps(토스구조).md",
+    "resume/이력서_부릉_DevOps.md",
+    "resume/이력서_뱅크샐러드_DevOps.md",
+    "resume/이력서_모두싸인_DevOps.md",
+    "resume/이력서_매드업_DevOps.md",
+    "resume/이력서_로앤컴퍼니_DevOps.md",
+    "resume/이력서_넥슨게임즈_인프라.md",
+    "resume/이력서_네이버페이_DevOps.md",
+    "resume/(제출 완료)이력서_지바이크_Platform.md",
+    "resume/(제출 완료)이력서_아정당_DevOps.md",
+    "resume/이력서_미리디_DevOps.md",
+    "resume/(제출 완료)이력서_골프존클라우드_DevOps.md",
+    "resume/(제출 완료)이력서_고위드_DevOps.md",
+    "resume/(제출 완료)경력기술서_NHN클라우드_프로젝트별_상세.md",
+    "readme.md",
     "resume/DevOps_엔지니어(토스뱅크).pdf",
     "resume/DevOps 엔지니어(토스뱅크).md",
-    "resume/(제출 완료)경력기술서_NHN클라우드_프로젝트별_상세.md",
     "resume/이력서_힐링페이퍼_DevSecOps.md",
     "resume/이력서_한국신용데이터_CloudNetwork.md",
     "resume/이력서_페이타랩_DevOps.md",
     "resume/이력서_티맵모빌리티_SRE_최적화.md",
     "resume/이력서_토스인슈어런스_DevOps.md",
     "resume/이력서_크림_SRE.md",
-    "resume/이력서_쿠팡_SRE_최적화.md",
-    "resume/이력서_코인원_DevOps_최적화.md",
-    "resume/이력서_코인원_DevOps(토스구조).md",
-    "resume/이력서_지바이크_Platform.md",
-    "resume/이력서_부릉_DevOps.md",
-    "resume/이력서_뱅크샐러드_DevOps.md",
-    "resume/이력서_미리디_DevOps.md",
-    "resume/이력서_모두싸인_DevOps.md",
-    "resume/이력서_매드업_DevOps.md",
-    "resume/이력서_로앤컴퍼니_DevOps.md",
-    "resume/이력서_넥슨게임즈_인프라.md",
-    "resume/이력서_네이버페이_DevOps.md",
-    "resume/이력서_골프존클라우드_DevOps.md",
-    "resume/(제출 완료)이력서_크림페이_DevOps.md",
-    "resume/(제출 완료)이력서_코빗_DevOps.md",
-    "resume/(제출 완료)이력서_안랩블록체인_DevOps.md",
-    "resume/(제출 완료)이력서_아정당_DevOps.md",
     "resume",
     "DevOps_엔지니어(토스뱅크).pdf",
     "Devops_엔지니어(토스뱅크).pdf",
