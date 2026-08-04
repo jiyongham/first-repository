@@ -8,17 +8,17 @@
         "type": "tabs",
         "children": [
           {
-            "id": "1e86ecf64311e9a9",
+            "id": "b5d3595744c071ff",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "resume/이력서_모두싸인_DevOps.md",
+                "file": "interview/면접준비_페이타랩_DevOps.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "이력서_모두싸인_DevOps"
+              "title": "면접준비_페이타랩_DevOps"
             }
           }
         ]
@@ -183,44 +183,44 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "1e86ecf64311e9a9",
+  "active": "b5d3595744c071ff",
   "lastOpenFiles": [
-    "interview/자기소개서_페이타랩_DevOps.md",
+    "interview/클라우드_추상화_아래_3가지.md",
+    "interview/ArgoRollouts_실습시나리오.md",
+    "argocd/rollout-demo.yaml",
     "interview/면접준비_페이타랩_DevOps.md",
-    "수터뷰.md",
+    "interview/면접_자기소개_페이타랩.md",
+    "interview/스타벅스_사이렌오더_핵심카드.md",
+    "interview/자기소개서_페이타랩_DevOps.md",
+    "interview/Terraform_State_관리표준.md",
+    "interview/conntrack_임계치_산정.md",
     "interview/수터뷰.md",
-    "resume/이력서_모두싸인_DevOps.md",
-    "무제",
-    "resume/이력서_매드업_DevOps.md",
+    "resume/(제출 완료)이력서_페이타랩_DevOps.md",
     "resume/이력서_로앤컴퍼니_DevOps.md",
     "resume/이력서_넥슨게임즈_인프라.md",
     "resume/이력서_네이버페이_DevOps.md",
-    "resume/이력서_티맵모빌리티_SRE_최적화.md",
-    "resume/이력서_토스인슈어런스_DevOps.md",
-    "resume/이력서_크림_SRE.md",
-    "resume/이력서_쿠팡_SRE_최적화.md",
-    "면접준비_페이타랩_DevOps.md",
-    "interview",
-    "무제 폴더",
-    "인터뷰.md",
-    "서비스-이상탐지-발표정리.md",
-    "자기소개서_페이타랩_DevOps.md",
-    "resume/(제출 완료)이력서_골프존클라우드_DevOps.md",
-    "resume/(제출 완료)이력서_페이타랩_DevOps.md",
-    "resume/이력서_미리디_DevOps.md",
+    "interview/면접_경험질문_페이타랩.md",
     "resume/이력서_뱅크샐러드_DevOps.md",
-    "resume/이력서_코인원_DevOps(토스구조).md",
-    "resume/이력서_코인원_DevOps_최적화.md",
-    "resume/(제출 완료)경력기술서_NHN클라우드_프로젝트별_상세.md",
-    "resume/(제출 완료)이력서_고위드_DevOps.md",
-    "resume/이력서_힐링페이퍼_DevSecOps.md",
-    "eks/aws_cluster.yml",
-    "eks",
-    "resume/DevOps_엔지니어(토스뱅크).pdf",
-    "resume",
-    "DevOps_엔지니어(토스뱅크).pdf",
-    "Devops_엔지니어(토스뱅크).pdf",
-    "무제.canvas",
-    "무제.base"
+    "resume/이력서_매드업_DevOps.md",
+    "resume/(제출 완료)이력서_매드업_DevOps.md",
+    "매드업_DevOps_인프라_라이프사이클_경력기술서.md",
+    "resume/(제출 완료)이력서_부릉_DevOps.md",
+    "IaC",
+    "무제 폴더",
+    "memory/MEMORY.md",
+    "memory/_conversations_memory.md",
+    "memory/topics/travel.md",
+    "memory/topics/running.md",
+    "memory/topics/recent-work.md",
+    "memory/topics/physical-profile.md",
+    "memory/topics/interests.md",
+    "memory/topics",
+    "memory/areas",
+    "memory",
+    "data-56d4d7b8-c0d0-4425-baa5-ee743fa7ac21-1785638590-12555463-batch-0000/projects/019ef69e-7d66-77d6-8d33-2f37adca155a.json",
+    "data-56d4d7b8-c0d0-4425-baa5-ee743fa7ac21-1785638590-12555463-batch-0000/users.json",
+    "data-56d4d7b8-c0d0-4425-baa5-ee743fa7ac21-1785638590-12555463-batch-0000/projects",
+    "data-56d4d7b8-c0d0-4425-baa5-ee743fa7ac21-1785638590-12555463-batch-0000/memories.json",
+    "무제.canvas"
   ]
 }
