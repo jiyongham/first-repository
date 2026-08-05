@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "interview/면접준비_페이타랩_DevOps.md",
+                "file": "interview/클라우드_추상화_아래_3가지.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "면접준비_페이타랩_DevOps"
+              "title": "클라우드_추상화_아래_3가지"
             }
           }
         ]
@@ -185,21 +185,21 @@
   },
   "active": "b5d3595744c071ff",
   "lastOpenFiles": [
-    "interview/클라우드_추상화_아래_3가지.md",
-    "interview/ArgoRollouts_실습시나리오.md",
-    "argocd/rollout-demo.yaml",
-    "interview/면접준비_페이타랩_DevOps.md",
-    "interview/면접_자기소개_페이타랩.md",
-    "interview/스타벅스_사이렌오더_핵심카드.md",
-    "interview/자기소개서_페이타랩_DevOps.md",
     "interview/Terraform_State_관리표준.md",
-    "interview/conntrack_임계치_산정.md",
+    "interview/면접_자기소개_페이타랩.md",
+    "interview/면접_경험질문_페이타랩.md",
     "interview/수터뷰.md",
+    "argocd/ArgoRollouts_실습시나리오.md",
+    "interview/conntrack_임계치_산정.md",
+    "interview/스타벅스_사이렌오더_핵심카드.md",
+    "interview/면접준비_페이타랩_DevOps.md",
+    "interview/클라우드_추상화_아래_3가지.md",
+    "argocd/rollout-demo.yaml",
+    "interview/자기소개서_페이타랩_DevOps.md",
     "resume/(제출 완료)이력서_페이타랩_DevOps.md",
     "resume/이력서_로앤컴퍼니_DevOps.md",
     "resume/이력서_넥슨게임즈_인프라.md",
     "resume/이력서_네이버페이_DevOps.md",
-    "interview/면접_경험질문_페이타랩.md",
     "resume/이력서_뱅크샐러드_DevOps.md",
     "resume/이력서_매드업_DevOps.md",
     "resume/(제출 완료)이력서_매드업_DevOps.md",
