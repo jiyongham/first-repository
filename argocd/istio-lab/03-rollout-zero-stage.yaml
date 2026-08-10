@@ -1,0 +1,60 @@
+# Lab 4 — "0단계 모드" 재현
+# 페이타랩 블로그의 0단계 모드 = 워크로드는 뜨지만 외부 트래픽 0%, QA 헤더만 canary로
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: demo
+  namespace: default
+spec:
+  # replicas 미선언 — HPA가 소유 (Lab 3 결론)
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels: {app: demo}
+  template:
+    metadata:
+      labels: {app: demo}
+    spec:
+      containers:
+        - name: demo
+          image: argoproj/rollouts-demo:blue
+          ports:
+            - containerPort: 8080
+          resources:
+            requests: {memory: 32Mi, cpu: 50m}
+
+  strategy:
+    canary:
+      canaryService: demo-canary
+      stableService: demo-stable
+
+      trafficRouting:
+        # ⚠️ setHeaderRoute를 쓰려면 managedRoutes에 이름을 먼저 선언해야 합니다.
+        #    이게 없으면 스텝이 조용히 무시됩니다.
+        managedRoutes:
+          - name: qa-route
+        istio:
+          virtualService:
+            name: demo-vsvc
+            routes:
+              - primary        # 02-virtualservice.yaml의 route name과 일치
+
+      steps:
+        # ═══ 0단계 모드 ═══
+        - setCanaryScale:
+            replicas: 1        # 파드는 뜨되
+        - setWeight: 0         # 외부 트래픽은 0%
+        - setHeaderRoute:      # QA 헤더가 붙은 요청만 canary로
+            name: qa-route
+            match:
+              - headerName: X-QA-Canary
+                headerValue:
+                  exact: "true"
+        - pause: {}            # ← 여기서 멈춤. QA 수행 구간
+
+        # ═══ 통상 Canary 진행 ═══
+        - setHeaderRoute:
+            name: qa-route     # 이름만 남기고 match 제거 = 헤더 라우팅 해제
+        - setWeight: 20
+        - pause: {duration: 1m}
+        - setWeight: 50
+        - pause: {duration: 1m}

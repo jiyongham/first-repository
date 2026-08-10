@@ -1,0 +1,15 @@
+# VirtualService의 hosts:[demo]로 접속하려면 이 이름의 Service가 있어야 DNS가 풀립니다.
+# Istio가 실제 라우팅은 VirtualService 규칙대로 stable/canary로 분배하므로,
+# 이 Service는 "이름과 포트를 알려주는 진입점" 역할만 합니다.
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo
+  namespace: default
+spec:
+  selector:
+    app: demo
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

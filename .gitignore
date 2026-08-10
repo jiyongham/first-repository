@@ -8,3 +8,4 @@ data-*-batch-*/
 conversations.json
 memories.json
 users.json
+IaC/variables.tf

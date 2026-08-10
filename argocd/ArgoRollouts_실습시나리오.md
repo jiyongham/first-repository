@@ -1,4 +1,4 @@
-# Argo Rollouts 최소 실습 시나리오 (K3s)
+	# Argo Rollouts 최소 실습 시나리오 (K3s)
 
 > **목표**: 면접에서 **"최근에 직접 띄워봤습니다"**라고 말할 수 있게 만드는 것.
 > 도구를 마스터하는 게 아니라, **개념이 실물로 어떻게 동작하는지 눈으로 본 상태**를 만드는 것이 목적입니다.
@@ -166,7 +166,38 @@ kubectl argo rollouts undo demo --to-revision=2
 
 ---
 
-## Lab 3 — HPA와 함께 쓰기 (30분) ⭐ 기존 경험과 연결
+## Lab 3 — HPA × ArgoCD Self-Heal 충돌 재현 (60분) ⭐⭐ 이번 실습의 두 번째 하이라이트
+
+> **목적**: 본인이 Deployment에서 겪었던 충돌이 **Rollout 리소스에서도 동일하게 재현되는지** 직접 확인하는 것.
+> 이걸 해두면 면접에서 **"제가 겪은 문제가 이 환경에서는 어떻게 되는지 궁금해서 직접 붙여봤습니다"**라고 말할 수 있습니다. 경험이 학습으로 이어졌다는 가장 좋은 증거입니다.
+
+### 3-0. 사전 준비 — 두 가지 함정
+
+**① metrics-server 확인**
+
+K3s는 metrics-server를 기본 포함합니다. 동작하는지만 확인하세요.
+
+```bash
+kubectl top pods
+# error: Metrics API not available  → 아직 준비 중이거나 비활성. 1~2분 후 재시도
+```
+
+**② `cpu request` 값을 올려야 합니다** ⚠️
+
+Lab 1의 Rollout은 `cpu: 5m`으로 되어 있는데, 이 값이면 **아이들 상태의 오버헤드만으로도 60%를 넘겨서** HPA가 즉시 maxReplicas까지 올라갑니다. 실험이 안 됩니다.
+
+HPA의 Utilization은 **실사용량 ÷ request**로 계산되기 때문에, request가 작으면 사용률이 과장됩니다.
+
+```bash
+# rollout-demo.yaml 수정
+#   resources:
+#     requests: {memory: 32Mi, cpu: 50m}
+kubectl apply -f rollout-demo.yaml
+```
+
+> 🔗 **면접에서 쓸 수 있는 디테일입니다.** "HPA가 Utilization을 request 기준으로 계산하기 때문에, request를 낮게 잡으면 사용률이 부풀려져서 불필요한 스케일아웃이 일어납니다." — 실습해본 사람만 아는 부분입니다.
+
+### 3-1. HPA를 Rollout에 연결
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -187,11 +218,159 @@ spec:
         target: {type: Utilization, averageUtilization: 60}
 ```
 
-**확인할 것**: HPA가 `Rollout` 리소스를 직접 스케일 대상으로 인식하는 것
+```bash
+kubectl apply -f hpa.yaml
+kubectl get hpa demo -w
+```
 
-> 🔎 **여기가 본인 경험과 이어지는 지점입니다.** Deployment였을 때는 ArgoCD Self-Heal이 `spec.replicas`를 되돌려 HPA와 충돌했는데, Rollout에서도 **같은 구조의 문제가 존재하는지** 직접 확인해보세요. ArgoCD로 이 Rollout을 관리하면서 Self-Heal을 켜보면 재현됩니다.
+**❓ 왜 Deployment가 아닌 리소스를 HPA가 스케일할 수 있을까**
+
+`Rollout` CRD가 **`/scale` 서브리소스를 구현**하기 때문입니다. HPA는 대상 리소스의 종류를 몰라도 되고, `scale` 서브리소스만 있으면 replicas를 읽고 쓸 수 있습니다.
+
+> 🔑 **면접용 한 문장**: "HPA는 대상이 Deployment인지 Rollout인지 몰라도 됩니다. `scale` 서브리소스만 구현돼 있으면 스케일할 수 있는 구조라서, 커스텀 리소스도 HPA 대상이 될 수 있습니다."
+
+**확인**
+
+```bash
+kubectl get hpa demo
+# TARGETS가 <unknown>이면 metrics-server 또는 request 미설정 문제
+```
+
+### 3-2. 부하를 걸어 스케일아웃 관찰
+
+```bash
+# 부하 생성기
+kubectl run load --image=busybox --restart=Never -- \
+  /bin/sh -c "while true; do wget -q -O- http://demo/; done"
+
+# 다른 창에서 관찰
+watch kubectl get hpa,rollout,pods
+```
+
+replicas가 3에서 올라가는 것을 확인한 뒤 부하를 멈춥니다.
+
+```bash
+kubectl delete pod load
+```
+
+> 💡 **스케일인은 느립니다.** 기본 안정화 시간(`stabilizationWindowSeconds`)이 **5분**이라 바로 안 줄어듭니다. 이것도 실습으로만 체감되는 부분입니다 — 페이타랩이 "Autoscaler가 개입할 때는 이미 늦었다"고 한 이유와 같은 맥락입니다. **스케일 판단에는 항상 지연이 있습니다.**
+
+### 3-3. ⭐ 충돌 재현 — 여기가 핵심
+
+**ArgoCD 설치 (이미 있으면 생략)**
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+**Rollout을 Git에 올리고 Application으로 등록**
+
+이때 **매니페스트에 `replicas: 5`를 명시한 채로** 둡니다. 이게 충돌의 씨앗입니다.
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: <본인 Git 저장소>
+    path: manifests
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true        # ← 이걸 켜야 재현됩니다
+```
+
+**재현 절차**
+
+1. 위 Application을 적용하고 Synced 상태 확인
+2. 부하를 걸어 HPA가 replicas를 5 → 8로 올리게 만듦
+3. **관찰**
+
+```bash
+kubectl argo rollouts get rollout demo --watch
+kubectl get application demo -n argocd -w
+```
+
+**보이는 현상**
+
+- HPA가 replicas를 8로 올림
+- ArgoCD가 "Git에는 5인데 클러스터는 8" → **OutOfSync** 판정
+- Self-Heal이 다시 5로 되돌림
+- 부하는 그대로니 HPA가 또 8로 올림
+- **무한 반복** — 파드가 계속 뜨고 죽습니다
+
+> 🔑 **여기서 확인되는 사실**: 리소스가 Deployment든 Rollout이든 **문제의 구조는 완전히 같습니다.** 원인은 리소스 종류가 아니라 **"하나의 필드를 두 개의 컨트롤러가 서로 다른 근거로 관리한다"**는 데 있습니다.
+
+### 3-4. 해결 — 소유권 나누기
+
+```yaml
+spec:
+  ignoreDifferences:
+    - group: argoproj.io          # ← Deployment는 apps
+      kind: Rollout
+      jsonPointers:
+        - /spec/replicas
+```
+
+적용 후 다시 부하를 걸어보면 **HPA가 올린 값이 유지되고 Synced 상태도 정상**입니다.
+
+**더 나은 방법 — 애초에 선언하지 않기**
+
+```yaml
+# Rollout 매니페스트에서 replicas 필드를 아예 제거
+# HPA가 관리할 값을 Git에 적을 이유가 없음
+```
+
+이러면 `ignoreDifferences`도 필요 없습니다. **예외 처리보다 애초에 충돌 지점을 만들지 않는 쪽이 낫습니다.**
+
+> 💬 **면접에서 이 순서로 말하면 좋습니다**
+> "제가 당시엔 `ignoreDifferences`로 풀었는데, 다시 해보니 **매니페스트에서 replicas를 아예 빼는 게 더 깔끔**하더군요. HPA가 관리할 값을 Git에 적어두는 것 자체가 충돌의 원인이었습니다."
 >
-> 💬 **면접에서**: "제가 겪었던 HPA-Self-Heal 충돌이 Rollout 리소스에서는 어떻게 되는지 궁금해서 직접 붙여봤습니다" — **경험이 학습으로 이어졌다는 가장 좋은 증거**입니다.
+> → **같은 문제를 다시 보고 더 나은 답을 찾았다**는 서사가 됩니다. 성장했다는 증거로 읽힙니다.
+
+### 3-5. 심화 — 카나리 진행 중에 HPA가 동작하면?
+
+시간이 있으면 여기까지 해보세요. **역질문 소재가 나옵니다.**
+
+부하를 건 상태에서 `set image`로 카나리 배포를 시작하고 관찰합니다.
+
+```bash
+kubectl argo rollouts set image demo demo=argoproj/rollouts-demo:green
+watch kubectl get rs -l app=demo
+```
+
+**볼 것**
+
+- HPA는 Rollout 전체의 `spec.replicas`를 조정합니다
+- Rollout 컨트롤러는 그 값을 **stable과 canary에 단계 비율대로 배분**합니다
+- 즉 두 컨트롤러가 **서로 다른 층위**에서 일합니다 — HPA는 총량, Rollout은 분배
+
+**생각해볼 지점**
+
+HPA는 파드 CPU 평균으로 판단하는데, 이 평균에는 **stable과 canary가 섞여 있습니다.** 만약 카나리 버전에 성능 회귀가 있어서 CPU를 더 먹으면, HPA는 그걸 "부하 증가"로 읽고 스케일아웃할 수 있습니다.
+
+> 💬 **역질문으로 아주 좋습니다**
+> "Canary 배포 중에는 HPA가 보는 CPU 평균에 신·구 버전이 섞이는데, 카나리 버전의 성능 회귀와 실제 부하 증가를 어떻게 구분하시나요?"
+>
+> **실습하지 않으면 나올 수 없는 질문**입니다.
+
+### ✅ Lab 3에서 얻는 것
+
+- [x] HPA가 커스텀 리소스를 스케일하는 원리 (`scale` 서브리소스)
+- [x] `cpu request`가 HPA 판단에 미치는 영향
+- [x] 스케일인 안정화 지연 (기본 5분)
+- [x] **Self-Heal × HPA 충돌이 Rollout에서도 동일하게 재현됨을 직접 확인**
+- [x] `ignoreDifferences`보다 **replicas를 아예 선언하지 않는 것**이 낫다는 결론
+- [x] 카나리 중 HPA의 층위 분리와 그 한계
 
 ---
 
@@ -201,10 +380,10 @@ spec:
 
 ### 개념 매핑
 
-| 페이타랩 "0단계 모드" | Argo Rollouts 기능 |
-|---|---|
-| 워크로드는 뜨지만 외부 트래픽 0% | `setWeight: 0` + `setCanaryScale` |
-| QA용 특수 헤더 요청만 canary로 | **`setHeaderRoute`** |
+| 페이타랩 "0단계 모드"         | Argo Rollouts 기능                  |
+| --------------------- | --------------------------------- |
+| 워크로드는 뜨지만 외부 트래픽 0%   | `setWeight: 0` + `setCanaryScale` |
+| QA용 특수 헤더 요청만 canary로 | **`setHeaderRoute`**              |
 
 `setHeaderRoute`는 지정한 헤더가 매칭되는 요청만 canary 서비스로 보내는 스텝입니다. **현재는 Istio 등 헤더 라우팅을 지원하는 트래픽 라우터와 함께 써야 동작합니다.**
 

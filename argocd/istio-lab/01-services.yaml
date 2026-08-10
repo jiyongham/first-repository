@@ -1,0 +1,27 @@
+# Lab 4 — stable / canary 두 개의 Service
+# ⚠️ port에 name(http-)이 반드시 있어야 Istio가 L7로 인식합니다. 없으면 TCP로 처리돼 헤더 라우팅이 안 됩니다.
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-stable
+  namespace: default
+spec:
+  selector:
+    app: demo
+  ports:
+    - name: http          # ← 필수
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-canary
+  namespace: default
+spec:
+  selector:
+    app: demo
+  ports:
+    - name: http          # ← 필수
+      port: 80
+      targetPort: 8080

@@ -27,7 +27,7 @@ spec:
           image: argoproj/rollouts-demo:blue
           ports: [{containerPort: 8080}]
           resources:
-            requests: {memory: 32Mi, cpu: 5m}
+            requests: {memory: 32Mi, cpu: 50m}
 ---
 apiVersion: v1
 kind: Service

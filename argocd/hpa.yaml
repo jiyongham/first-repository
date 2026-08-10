@@ -1,0 +1,16 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: demo
+spec:
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1   # ← Deployment가 아니라 Rollout
+    kind: Rollout
+    name: demo
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 60}

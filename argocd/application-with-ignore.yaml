@@ -1,0 +1,30 @@
+# Lab 3의 "해결" 단계에서 적용할 버전
+# 충돌을 먼저 재현한 뒤(application.yaml 그대로), 이걸 적용해서 해소되는 걸 확인하세요.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jiyongham/first-repository.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+  # ⭐ 핵심: replicas 필드만 비교 대상에서 제외
+  #    HPA가 이 필드의 소유자이므로 ArgoCD는 손대지 않음
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

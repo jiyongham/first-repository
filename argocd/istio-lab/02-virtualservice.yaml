@@ -1,0 +1,21 @@
+# Lab 4 — Argo Rollouts가 가중치를 조작할 대상
+# route의 name(primary)이 Rollout의 trafficRouting.istio.virtualService.routes와 일치해야 합니다.
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: demo-vsvc
+  namespace: default
+spec:
+  hosts:
+    - demo            # 메시 내부에서 호출할 이름
+  gateways:
+    - mesh            # 클러스터 내부 트래픽만. 외부 노출하려면 Gateway 추가
+  http:
+    - name: primary   # ← Rollout이 이 route의 weight를 조작합니다
+      route:
+        - destination:
+            host: demo-stable
+          weight: 100
+        - destination:
+            host: demo-canary
+          weight: 0
