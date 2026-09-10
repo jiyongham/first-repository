@@ -8,35 +8,34 @@
         "type": "tabs",
         "children": [
           {
-            "id": "b5d3595744c071ff",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "interview/IaC_프로젝트_면접답변.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "IaC_프로젝트_면접답변"
-            }
-          },
-          {
             "id": "9c0f5c9bf013db81",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "interview/IaC_프로젝트_면접답변.md",
+                "file": "projects/사내서비스_개발팀_병목해소.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "IaC_프로젝트_면접답변"
+              "title": "사내서비스_개발팀_병목해소"
+            }
+          },
+          {
+            "id": "8755a2c2c5047e9e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "interview/면접_3대질문_암기카드.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "면접_3대질문_암기카드"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -56,7 +55,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "파일 탐색기"
@@ -200,42 +201,42 @@
   },
   "active": "9c0f5c9bf013db81",
   "lastOpenFiles": [
-    "interview/ArgoCD_SelfHeal_HPA_충돌.md",
-    "interview/면접준비_페이타랩_DevOps.md",
-    "interview/DB로그알람_표준.md",
-    "argocd/ArgoRollouts_실습시나리오.md",
-    "interview/IaC_프로젝트_면접답변.md",
-    "interview/conntrack_임계치_산정.md",
-    "interview/자기소개서_페이타랩_DevOps.md",
-    "interview/Terraform_State_관리표준.md",
-    "interview/스타벅스_사이렌오더_핵심카드.md",
-    "interview/클라우드_추상화_아래_3가지.md",
-    "interview/면접_자기소개_페이타랩.md",
-    "interview/면접_경험질문_페이타랩.md",
-    "resume/(제출 완료)이력서_페이타랩_DevOps.md",
-    "resume/(제출 완료)이력서_LG유플러스볼트업_DevSecOps.md",
-    "resume/(제출 완료)이력서_크림_SRE.md",
-    "resume/이력서_넥슨게임즈_인프라.md",
+    "resume/이력서_와탭랩스_InfraEngineer.md",
+    "resume/지원서_렌트리_DevOps.md",
+    "resume/지원서_룰루랩_DevSecOps.md",
+    "resume/포트폴리오_함지용.md",
+    "resume/이력서_힐링페이퍼_DevSecOps.md",
+    "resume/이력서_토스인슈어런스_DevOps.md",
     "resume/이력서_네이버페이_DevOps.md",
-    "resume/(제출 완료)이력서_미리디_DevOps.md",
-    "resume/(제출 완료)이력서_LGU플러스_DevOps.md",
-    "argocd/istio-lab/00-root-service.yaml",
-    "interview/수터뷰.md",
-    "argocd/istio-lab/03-rollout-zero-stage.yaml",
-    "argocd/istio-lab/02-virtualservice.yaml",
-    "argocd/istio-lab/01-services.yaml",
-    "argocd/istio-lab",
-    "resume/(제출 완료)경력기술서_NHN클라우드_프로젝트별_상세.md",
-    "argocd/application-with-ignore.yaml",
-    "k8s/hpa.yaml",
-    "argocd/argocd-istio-gateway.yaml",
-    "IaC/lookup_pd.py",
-    "IaC/vm.tfvars",
-    "resume/이력서_로앤컴퍼니_DevOps.md",
-    "resume/이력서_뱅크샐러드_DevOps.md",
-    "resume/이력서_매드업_DevOps.md",
-    "resume/(제출 완료)이력서_매드업_DevOps.md",
-    "매드업_DevOps_인프라_라이프사이클_경력기술서.md",
+    "resume/이력서_넥스트증권_DevOps.md",
+    "resume/이력서_두나무_DevOps.md",
+    "resume/이력서_루닛_DevOps.md",
+    "resume/이력서_룰루랩_DevSecOps.md",
+    "resume/이력서_메가존_PhysicalAI_DevOps.md",
+    "resume/이력서_번개장터_DevSecOps.md",
+    "resume/이력서_어크로스비_DevSecOps.md",
+    "resume/이력서_업스테이지_AIDevOps.md",
+    "resume/이력서_클로버추얼패션_DevOps.md",
+    "interview/면접준비_페이타랩_DevOps.md",
+    "interview/면접_자기소개_페이타랩.md",
+    "interview/면접_사이드프로젝트_지표방어.md",
+    "interview/면접_경험질문_페이타랩.md",
+    "interview/면접_3대질문_암기카드.md",
+    "interview/가비아_클라우드엔지니어_면접_플레이북.md",
+    "interview/IaC_프로젝트_면접답변.md",
+    "interview/가비아_CloudEngineer_면접준비.md",
+    "resume/(철회)이력서_한국신용데이터_CloudNetwork.md",
+    "resume/(철회)이력서_로앤컴퍼니_DevOps.md",
+    "aws",
+    "troubleshoot",
+    "resume/경력기술서_케이뱅크_SRE.txt",
+    "projects",
+    "resume/~$서_함지용_IT_Customer_Engineer_PERSOL.docx",
+    "resume/이력서_함지용_IT_Customer_Engineer_PERSOL.docx",
+    "resume/표준이력서_써치앤컴퍼니(함지용).doc",
+    "표준이력서_써치앤컴퍼니(함지용).doc",
+    "이력서_함지용_IT_Customer_Engineer_PERSOL.docx",
+    "~$서_Name_Position_PERSOL.docx",
     "무제.canvas"
   ]
 }
